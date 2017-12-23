@@ -1,111 +1,104 @@
-const assert = require('assert');
-const fs = require('fs');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('less', function() {
-  it('should support requiring less files', async function() {
-    let b = await bundle(__dirname + '/integration/less/index.js');
+test('less: should support requiring less files', async t => {
+  await t.context.bundle(__dirname + '/integration/less/index.js');
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.less'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.less'],
-          childBundles: []
-        }
-      ]
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
-
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('.index'));
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.less'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.less'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support less imports', async function() {
-    let b = await bundle(__dirname + '/integration/less-import/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.less'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.less'],
-          childBundles: []
-        }
-      ]
-    });
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('.index'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
+test('less: should support less imports', async t => {
+  await t.context.bundle(__dirname + '/integration/less-import/index.js');
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('.index'));
-    assert(css.includes('.base'));
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.less'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.less'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support linking to assets with url() from less', async function() {
-    let b = await bundle(__dirname + '/integration/less-url/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.less'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.less'],
-          childBundles: []
-        },
-        {
-          type: 'woff2',
-          assets: ['test.woff2'],
-          childBundles: []
-        }
-      ]
-    });
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('.index'));
+  t.true(css.includes('.base'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
+test('less: should support linking to assets with url() from less', async t => {
+  await t.context.bundle(__dirname + '/integration/less-url/index.js');
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(/url\("[0-9a-f]+\.woff2"\)/.test(css));
-    assert(css.includes('url("http://google.com")'));
-    assert(css.includes('.index'));
-
-    assert(
-      fs.existsSync(
-        __dirname + '/dist/' + css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]
-      )
-    );
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.less'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.less'],
+        childBundles: []
+      },
+      {
+        type: 'woff2',
+        assets: ['test.woff2'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support transforming less with postcss', async function() {
-    let b = await bundle(__dirname + '/integration/less-postcss/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.less'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.less'],
-          childBundles: []
-        }
-      ]
-    });
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(/url\("[0-9a-f]+\.woff2"\)/.test(css));
+  t.true(css.includes('url("http://google.com")'));
+  t.true(css.includes('.index'));
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), '_index_ku5n8_1');
+  t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
+});
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('._index_ku5n8_1'));
+test('less: should support transforming less with postcss', async t => {
+  await t.context.bundle(__dirname + '/integration/less-postcss/index.js');
+
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.less'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.less'],
+        childBundles: []
+      }
+    ]
   });
+
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), '_index_ku5n8_1');
+
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('._index_ku5n8_1'));
 });

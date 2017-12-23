@@ -1,360 +1,360 @@
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('javascript', function() {
-  it('should produce a basic JS bundle with CommonJS requires', async function() {
-    let b = await bundle(__dirname + '/integration/commonjs/index.js');
+test('javascript: should produce a basic JS bundle with CommonJS requires', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/commonjs/index.js'
+  );
 
-    assert.equal(b.assets.size, 8);
-    assert.equal(b.childBundles.size, 0);
+  t.is(b.assets.size, 8);
+  t.is(b.childBundles.size, 0);
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
+});
+
+test('javascript: should produce a basic JS bundle with ES6 imports', async t => {
+  const b = await t.context.bundle(__dirname + '/integration/es6/index.js');
+
+  t.is(b.assets.size, 8);
+  t.is(b.childBundles.size, 0);
+
+  const output = t.context.run();
+  t.is(typeof output, 'object');
+  t.is(typeof output.default, 'function');
+  t.is(output.default(), 3);
+});
+
+test('javascript: should produce a JS bundle with default exorts and no imports', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/es6-default-only/index.js'
+  );
+
+  t.is(b.assets.size, 1);
+  t.is(b.childBundles.size, 0);
+
+  const output = t.context.run();
+  t.is(typeof output, 'object');
+  t.is(typeof output.default, 'function');
+  t.is(output.default(), 3);
+});
+
+test('javascript: should split bundles when a dynamic import is used', async t => {
+  await t.context.bundle(__dirname + '/integration/dynamic/index.js');
+
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
+    childBundles: [
+      {
+        assets: ['local.js'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should produce a basic JS bundle with ES6 imports', async function() {
-    let b = await bundle(__dirname + '/integration/es6/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(await output(), 3);
+});
 
-    assert.equal(b.assets.size, 8);
-    assert.equal(b.childBundles.size, 0);
+test('javascript: should dynamic import files which import raw files', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/dynamic-references-raw/index.js'
+  );
 
-    let output = run(b);
-    assert.equal(typeof output, 'object');
-    assert.equal(typeof output.default, 'function');
-    assert.equal(output.default(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
+    childBundles: [
+      {
+        assets: ['local.js', 'test.txt'],
+        childBundles: ['test.txt']
+      }
+    ]
   });
 
-  it('should produce a JS bundle with default exorts and no imports', async function() {
-    let b = await bundle(__dirname + '/integration/es6-default-only/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(await output(), 3);
+});
 
-    assert.equal(b.assets.size, 1);
-    assert.equal(b.childBundles.size, 0);
+test('javascript: should return all exports as an object when using ES modules', async t => {
+  await t.context.bundle(__dirname + '/integration/dynamic-esm/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'object');
-    assert.equal(typeof output.default, 'function');
-    assert.equal(output.default(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
+    childBundles: [
+      {
+        assets: ['local.js'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should split bundles when a dynamic import is used', async function() {
-    let b = await bundle(__dirname + '/integration/dynamic/index.js');
+  const output = t.context.run().default;
+  t.is(typeof output, 'function');
+  t.is(await output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
-      childBundles: [
-        {
-          assets: ['local.js'],
-          childBundles: []
-        }
-      ]
-    });
+test('javascript: should hoist common dependencies into a parent bundle', async t => {
+  await t.context.bundle(__dirname + '/integration/dynamic-hoist/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: [
+      'index.js',
+      'common.js',
+      'common-dep.js',
+      'bundle-loader.js',
+      'bundle-url.js'
+    ],
+    childBundles: [
+      {
+        assets: ['a.js'],
+        childBundles: []
+      },
+      {
+        assets: ['b.js'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should dynamic import files which import raw files', async function() {
-    let b = await bundle(
-      __dirname + '/integration/dynamic-references-raw/index.js'
-    );
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(await output(), 7);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
-      childBundles: [
-        {
-          assets: ['local.js', 'test.txt'],
-          childBundles: ['test.txt']
-        }
-      ]
-    });
+test('javascript: should support requiring JSON files', async t => {
+  await t.context.bundle(__dirname + '/integration/json/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'local.json'],
+    childBundles: []
   });
 
-  it('should return all exports as an object when using ES modules', async function() {
-    let b = await bundle(__dirname + '/integration/dynamic-esm/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'bundle-loader.js', 'bundle-url.js'],
-      childBundles: [
-        {
-          assets: ['local.js'],
-          childBundles: []
-        }
-      ]
-    });
+test('javascript: should support importing a URL to a raw asset', async t => {
+  await t.context.bundle(__dirname + '/integration/import-raw/index.js');
 
-    let output = run(b).default;
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'test.txt'],
+    childBundles: [
+      {
+        type: 'txt',
+        assets: ['test.txt'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should hoist common dependencies into a parent bundle', async function() {
-    let b = await bundle(__dirname + '/integration/dynamic-hoist/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.true(/^\/[\S]+\/[0-9a-f]+\.txt$/.test(output()));
+  t.true(t.context.fs.existsSync(t.context.path.basename(output())));
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: [
-        'index.js',
-        'common.js',
-        'common-dep.js',
-        'bundle-loader.js',
-        'bundle-url.js'
-      ],
-      childBundles: [
-        {
-          assets: ['a.js'],
-          childBundles: []
-        },
-        {
-          assets: ['b.js'],
-          childBundles: []
-        }
-      ]
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 7);
+test('javascript: should minify JS in production mode', async t => {
+  await t.context.bundle(__dirname + '/integration/uglify/index.js', {
+    production: true
   });
 
-  it('should support requiring JSON files', async function() {
-    let b = await bundle(__dirname + '/integration/json/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'local.json'],
-      childBundles: []
-    });
+  let js = t.context.fs.readFileSync('index.js');
+  t.true(!js.includes('local.a'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+test('javascript: should use uglify config', async t => {
+  await t.context.bundle(__dirname + '/integration/uglify-config/index.js', {
+    production: true
   });
 
-  it('should support importing a URL to a raw asset', async function() {
-    let b = await bundle(__dirname + '/integration/import-raw/index.js');
+  let js = t.context.fs.readFileSync('index.js');
+  t.true(js.includes('console.log'));
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'test.txt'],
-      childBundles: [
-        {
-          type: 'txt',
-          assets: ['test.txt'],
-          childBundles: []
-        }
-      ]
-    });
+test('javascript: should insert global variables when needed', async t => {
+  await t.context.bundle(__dirname + '/integration/globals/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert(/^\/dist\/[0-9a-f]+\.txt$/.test(output()));
-    assert(fs.existsSync(__dirname + output()));
+  const output = t.context.run();
+  t.deepEqual(output(), {
+    dir: t.context.path.join(__dirname, '/integration/globals'),
+    file: t.context.path.join(__dirname, '/integration/globals/index.js'),
+    buf: new Buffer('browser').toString('base64'),
+    global: true
   });
+});
 
-  it('should minify JS in production mode', async function() {
-    let b = await bundle(__dirname + '/integration/uglify/index.js', {
-      production: true
-    });
+test('javascript: should insert environment variables', async t => {
+  await t.context.bundle(__dirname + '/integration/env/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+  const output = t.context.run();
+  t.is(output(), 'test:test');
+});
 
-    let js = fs.readFileSync(__dirname + '/dist/index.js', 'utf8');
-    assert(!js.includes('local.a'));
-  });
-
-  it('should use uglify config', async function() {
-    await bundle(__dirname + '/integration/uglify-config/index.js', {
-      production: true
-    });
-
-    let js = fs.readFileSync(__dirname + '/dist/index.js', 'utf8');
-    assert(js.includes('console.log'));
-  });
-
-  it('should insert global variables when needed', async function() {
-    let b = await bundle(__dirname + '/integration/globals/index.js');
-
-    let output = run(b);
-    assert.deepEqual(output(), {
-      dir: path.join(__dirname, '/integration/globals'),
-      file: path.join(__dirname, '/integration/globals/index.js'),
-      buf: new Buffer('browser').toString('base64'),
-      global: true
-    });
-  });
-
-  it('should insert environment variables', async function() {
-    let b = await bundle(__dirname + '/integration/env/index.js');
-
-    let output = run(b);
-    assert.equal(output(), 'test:test');
-  });
-
-  it('should support adding implicit dependencies', async function() {
-    let b = await bundle(__dirname + '/integration/json/index.js', {
-      delegate: {
-        getImplicitDependencies(asset) {
-          if (asset.basename === 'index.js') {
-            return [{name: __dirname + '/integration/css/index.css'}];
-          }
+test('javascript: should support adding implicit dependencies', async t => {
+  await t.context.bundle(__dirname + '/integration/json/index.js', {
+    delegate: {
+      getImplicitDependencies(asset) {
+        if (asset.basename === 'index.js') {
+          return [{name: __dirname + '/integration/css/index.css'}];
         }
       }
-    });
-
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'local.json', 'index.css'],
-      childBundles: [
-        {
-          type: 'css',
-          assets: ['index.css']
-        }
-      ]
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+    }
   });
 
-  it('should support requiring YAML files', async function() {
-    let b = await bundle(__dirname + '/integration/yaml/index.js');
-
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'local.yaml'],
-      childBundles: []
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'local.json', 'index.css'],
+    childBundles: [
+      {
+        type: 'css',
+        assets: ['index.css']
+      }
+    ]
   });
 
-  it('should support requiring CoffeeScript files', async function() {
-    let b = await bundle(__dirname + '/integration/coffee/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'local.coffee'],
-      childBundles: []
-    });
+test('javascript: should support requiring YAML files', async t => {
+  await t.context.bundle(__dirname + '/integration/yaml/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'local.yaml'],
+    childBundles: []
   });
 
-  it('should resolve the browser field before main', async function() {
-    let b = await bundle(__dirname + '/integration/resolve-entries/browser.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'browser.js',
-      assets: ['browser.js', 'browser-module.js'],
-      childBundles: []
-    });
+test('javascript: should support requiring CoffeeScript files', async t => {
+  await t.context.bundle(__dirname + '/integration/coffee/index.js');
 
-    let output = run(b);
-
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-browser');
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'local.coffee'],
+    childBundles: []
   });
 
-  it('should resolve advanced browser resolution', async function() {
-    let b = await bundle(
-      __dirname + '/integration/resolve-entries/browser-multiple.js'
-    );
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'browser-multiple.js',
-      assets: ['browser-multiple.js', 'projected-module.js'],
-      childBundles: []
-    });
+test('javascript: should resolve the browser field before main', async t => {
+  await t.context.bundle(__dirname + '/integration/resolve-entries/browser.js');
 
-    let output = run(b);
-
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-browser-multiple');
+  t.context.assertBundleTree({
+    name: 'browser.js',
+    assets: ['browser.js', 'browser-module.js'],
+    childBundles: []
   });
 
-  it('should resolve the module field before main', async function() {
-    let b = await bundle(
-      __dirname + '/integration/resolve-entries/module-field.js'
-    );
+  const output = t.context.run();
 
-    assertBundleTree(b, {
-      name: 'module-field.js',
-      assets: ['module-field.js', 'es6.module.js'],
-      childBundles: []
-    });
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-browser');
+});
 
-    let output = run(b);
+test('javascript: should resolve advanced browser resolution', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/resolve-entries/browser-multiple.js'
+  );
 
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-es6-module');
+  t.context.assertBundleTree({
+    name: 'browser-multiple.js',
+    assets: ['browser-multiple.js', 'projected-module.js'],
+    childBundles: []
   });
 
-  it('should resolve the jsnext:main field before main', async function() {
-    let b = await bundle(
-      __dirname + '/integration/resolve-entries/jsnext-field.js'
-    );
+  const output = t.context.run();
 
-    assertBundleTree(b, {
-      name: 'jsnext-field.js',
-      assets: ['jsnext-field.js', 'jsnext.module.js'],
-      childBundles: []
-    });
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-browser-multiple');
+});
 
-    let output = run(b);
+test('javascript: should resolve the module field before main', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/resolve-entries/module-field.js'
+  );
 
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-jsnext-module');
+  t.context.assertBundleTree({
+    name: 'module-field.js',
+    assets: ['module-field.js', 'es6.module.js'],
+    childBundles: []
   });
 
-  it('should resolve the module field before jsnext:main', async function() {
-    let b = await bundle(
-      __dirname + '/integration/resolve-entries/both-fields.js'
-    );
+  const output = t.context.run();
 
-    assertBundleTree(b, {
-      name: 'both-fields.js',
-      assets: ['both-fields.js', 'es6.module.js'],
-      childBundles: []
-    });
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-es6-module');
+});
 
-    let output = run(b);
+test('javascript: should resolve the jsnext:main field before main', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/resolve-entries/jsnext-field.js'
+  );
 
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-es6-module');
+  t.context.assertBundleTree({
+    name: 'jsnext-field.js',
+    assets: ['jsnext-field.js', 'jsnext.module.js'],
+    childBundles: []
   });
 
-  it('should resolve the main field', async function() {
-    let b = await bundle(
-      __dirname + '/integration/resolve-entries/main-field.js'
-    );
+  const output = t.context.run();
 
-    assertBundleTree(b, {
-      name: 'main-field.js',
-      assets: ['main-field.js', 'main.js'],
-      childBundles: []
-    });
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-jsnext-module');
+});
 
-    let output = run(b);
+test('javascript: should resolve the module field before jsnext:main', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/resolve-entries/both-fields.js'
+  );
 
-    assert.equal(typeof output.test, 'function');
-    assert.equal(output.test(), 'pkg-main-module');
+  t.context.assertBundleTree({
+    name: 'both-fields.js',
+    assets: ['both-fields.js', 'es6.module.js'],
+    childBundles: []
   });
+
+  const output = t.context.run();
+
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-es6-module');
+});
+
+test('javascript: should resolve the main field', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/resolve-entries/main-field.js'
+  );
+
+  t.context.assertBundleTree({
+    name: 'main-field.js',
+    assets: ['main-field.js', 'main.js'],
+    childBundles: []
+  });
+
+  const output = t.context.run();
+
+  t.is(typeof output.test, 'function');
+  t.is(output.test(), 'pkg-main-module');
 });

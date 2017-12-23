@@ -1,114 +1,106 @@
-const assert = require('assert');
-const fs = require('fs');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('stylus', function() {
-  it('should support requiring stylus files', async function() {
-    let b = await bundle(__dirname + '/integration/stylus/index.js');
+test('stylus: should support requiring stylus files', async t => {
+  await t.context.bundle(__dirname + '/integration/stylus/index.js');
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.styl'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.styl'],
-          childBundles: []
-        }
-      ]
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
-
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('.index'));
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.styl'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.styl'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support requiring stylus files with dependencies', async function() {
-    let b = await bundle(__dirname + '/integration/stylus-deps/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    // a.styl shouldn't be included as a dependency that we can see.
-    // stylus takes care of inlining it.
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.styl'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.styl'],
-          childBundles: []
-        }
-      ]
-    });
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('.index'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
+test('stylus: should support requiring stylus files with dependencies', async t => {
+  await t.context.bundle(__dirname + '/integration/stylus-deps/index.js');
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('.index'));
-    assert(css.includes('.a'));
-    assert(css.includes('-webkit-box'));
+  // a.styl shouldn't be included as a dependency that we can see.
+  // stylus takes care of inlining it.
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.styl'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.styl'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support linking to assets with url() from stylus', async function() {
-    let b = await bundle(__dirname + '/integration/stylus-url/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.styl'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.styl'],
-          childBundles: []
-        },
-        {
-          type: 'woff2',
-          assets: ['test.woff2'],
-          childBundles: []
-        }
-      ]
-    });
+  let css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('.index'));
+  t.true(css.includes('.a'));
+  t.true(css.includes('-webkit-box'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
+test('stylus: should support linking to assets with url() from stylus', async t => {
+  await t.context.bundle(__dirname + '/integration/stylus-url/index.js');
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(/url\("[0-9a-f]+\.woff2"\)/.test(css));
-    assert(css.includes('url("http://google.com")'));
-    assert(css.includes('.index'));
-
-    assert(
-      fs.existsSync(
-        __dirname + '/dist/' + css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]
-      )
-    );
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.styl'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.styl'],
+        childBundles: []
+      },
+      {
+        type: 'woff2',
+        assets: ['test.woff2'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should support transforming stylus with postcss', async function() {
-    let b = await bundle(__dirname + '/integration/stylus-postcss/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.styl'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.styl'],
-          childBundles: []
-        }
-      ]
-    });
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(/url\("[0-9a-f]+\.woff2"\)/.test(css));
+  t.true(css.includes('url("http://google.com")'));
+  t.true(css.includes('.index'));
+  t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
+});
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), '_index_g9mqo_1');
+test('stylus: should support transforming stylus with postcss', async t => {
+  await t.context.bundle(__dirname + '/integration/stylus-postcss/index.js');
 
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('._index_g9mqo_1'));
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.styl'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.styl'],
+        childBundles: []
+      }
+    ]
   });
+
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), '_index_g9mqo_1');
+
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('._index_g9mqo_1'));
 });

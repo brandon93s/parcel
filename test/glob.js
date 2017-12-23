@@ -1,58 +1,55 @@
-const assert = require('assert');
-const fs = require('fs');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('glob', function() {
-  it('should require a glob of files', async function() {
-    let b = await bundle(__dirname + '/integration/glob/index.js');
+test('glob: should require a glob of files', async t => {
+  await t.context.bundle(__dirname + '/integration/glob/index.js');
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', '*.js', 'a.js', 'b.js'],
-      childBundles: []
-    });
-
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 3);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', '*.js', 'a.js', 'b.js'],
+    childBundles: []
   });
 
-  it('should require nested directories with a glob', async function() {
-    let b = await bundle(__dirname + '/integration/glob-deep/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(await output(), 3);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', '*.js', 'a.js', 'b.js', 'c.js', 'z.js'],
-      childBundles: []
-    });
+test('glob: should require nested directories with a glob', async t => {
+  await t.context.bundle(__dirname + '/integration/glob-deep/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(await output(), 13);
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', '*.js', 'a.js', 'b.js', 'c.js', 'z.js'],
+    childBundles: []
   });
 
-  it('should support importing a glob of CSS files', async function() {
-    let b = await bundle(__dirname + '/integration/glob-css/index.js');
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(await output(), 13);
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'index.css', '*.css', 'other.css', 'local.css'],
-      childBundles: [
-        {
-          name: 'index.css',
-          assets: ['index.css', 'other.css', 'local.css'],
-          childBundles: []
-        }
-      ]
-    });
+test('glob: should support importing a glob of CSS files', async t => {
+  await t.context.bundle(__dirname + '/integration/glob-css/index.js');
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 2);
-
-    let css = fs.readFileSync(__dirname + '/dist/index.css', 'utf8');
-    assert(css.includes('.local'));
-    assert(css.includes('.other'));
-    assert(css.includes('.index'));
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'index.css', '*.css', 'other.css', 'local.css'],
+    childBundles: [
+      {
+        name: 'index.css',
+        assets: ['index.css', 'other.css', 'local.css'],
+        childBundles: []
+      }
+    ]
   });
+
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 2);
+
+  const css = t.context.fs.readFileSync('index.css');
+  t.true(css.includes('.local'));
+  t.true(css.includes('.other'));
+  t.true(css.includes('.index'));
 });

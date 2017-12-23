@@ -1,15 +1,13 @@
-const assert = require('assert');
-const {bundle, run} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('reason', function() {
-  it('should produce a bundle', async function() {
-    let b = await bundle(__dirname + '/integration/reason/index.js');
+test('reason: should produce a bundle', async t => {
+  const b = await t.context.bundle(__dirname + '/integration/reason/index.js');
 
-    assert.equal(b.assets.size, 2);
-    assert.equal(b.childBundles.size, 0);
+  t.is(b.assets.size, 2);
+  t.is(b.childBundles.size, 0);
 
-    let output = run(b);
-    assert.equal(typeof output, 'function');
-    assert.equal(output(), 3);
-  });
+  const output = t.context.run();
+  t.is(typeof output, 'function');
+  t.is(output(), 3);
 });

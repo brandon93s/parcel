@@ -1,99 +1,102 @@
-const assert = require('assert');
-const fs = require('fs');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('typescript', function() {
-  it('should produce a ts bundle using ES6 imports', async function() {
-    let b = await bundle(__dirname + '/integration/typescript/index.ts');
+test('typescript: should produce a ts bundle using ES6 imports', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/typescript/index.ts'
+  );
 
-    assert.equal(b.assets.size, 2);
-    assert.equal(b.childBundles.size, 0);
+  t.is(b.assets.size, 2);
+  t.is(b.childBundles.size, 0);
 
-    let output = run(b);
-    assert.equal(typeof output.count, 'function');
-    assert.equal(output.count(), 3);
+  const output = t.context.run();
+  t.is(typeof output.count, 'function');
+  t.is(output.count(), 3);
+});
+
+test('typescript: should produce a ts bundle using commonJS require', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/typescript-require/index.ts'
+  );
+
+  t.is(b.assets.size, 2);
+  t.is(b.childBundles.size, 0);
+
+  const output = t.context.run();
+  t.is(typeof output.count, 'function');
+  t.is(output.count(), 3);
+});
+
+test('typescript: should support json require', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/typescript-json/index.ts'
+  );
+
+  t.is(b.assets.size, 2);
+  t.is(b.childBundles.size, 0);
+
+  const output = t.context.run();
+  t.is(typeof output.count, 'function');
+  t.is(output.count(), 3);
+});
+
+test('typescript: should support env variables', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/typescript-env/index.ts'
+  );
+
+  t.is(b.assets.size, 1);
+  t.is(b.childBundles.size, 0);
+
+  const output = t.context.run();
+  t.is(typeof output.env, 'function');
+  t.is(output.env(), 'test');
+});
+
+test('typescript: should support importing a URL to a raw asset', async t => {
+  await t.context.bundle(__dirname + '/integration/typescript-raw/index.ts');
+
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.ts', 'test.txt'],
+    childBundles: [
+      {
+        type: 'txt',
+        assets: ['test.txt'],
+        childBundles: []
+      }
+    ]
   });
 
-  it('should produce a ts bundle using commonJS require', async function() {
-    let b = await bundle(
-      __dirname + '/integration/typescript-require/index.ts'
-    );
+  const output = t.context.run();
+  t.is(typeof output.getRaw, 'function');
+  t.true(/^\/[\S]+\/[0-9a-f]+\.txt$/.test(output.getRaw()));
+  t.true(t.context.fs.existsSync(t.context.path.basename(output.getRaw())));
+});
 
-    assert.equal(b.assets.size, 2);
-    assert.equal(b.childBundles.size, 0);
+test('typescript: should minify in production mode', async t => {
+  const b = await t.context.bundle(
+    __dirname + '/integration/typescript-require/index.ts',
+    {production: true}
+  );
 
-    let output = run(b);
-    assert.equal(typeof output.count, 'function');
-    assert.equal(output.count(), 3);
-  });
+  t.is(b.assets.size, 2);
+  t.is(b.childBundles.size, 0);
 
-  it('should support json require', async function() {
-    let b = await bundle(__dirname + '/integration/typescript-json/index.ts');
+  const output = t.context.run();
+  t.is(typeof output.count, 'function');
+  t.is(output.count(), 3);
 
-    assert.equal(b.assets.size, 2);
-    assert.equal(b.childBundles.size, 0);
+  const js = t.context.fs.readFileSync('index.js');
+  t.true(!js.includes('local.a'));
+});
 
-    let output = run(b);
-    assert.equal(typeof output.count, 'function');
-    assert.equal(output.count(), 3);
-  });
+test('typescript: should support loading tsconfig.json', async t => {
+  await t.context.bundle(__dirname + '/integration/typescript-config/index.ts');
 
-  it('should support env variables', async function() {
-    let b = await bundle(__dirname + '/integration/typescript-env/index.ts');
+  const output = t.context.run();
+  t.is(output, 2);
 
-    assert.equal(b.assets.size, 1);
-    assert.equal(b.childBundles.size, 0);
-
-    let output = run(b);
-    assert.equal(typeof output.env, 'function');
-    assert.equal(output.env(), 'test');
-  });
-
-  it('should support importing a URL to a raw asset', async function() {
-    let b = await bundle(__dirname + '/integration/typescript-raw/index.ts');
-
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.ts', 'test.txt'],
-      childBundles: [
-        {
-          type: 'txt',
-          assets: ['test.txt'],
-          childBundles: []
-        }
-      ]
-    });
-
-    let output = run(b);
-    assert.equal(typeof output.getRaw, 'function');
-    assert(/^\/dist\/[0-9a-f]+\.txt$/.test(output.getRaw()));
-    assert(fs.existsSync(__dirname + output.getRaw()));
-  });
-
-  it('should minify in production mode', async function() {
-    let b = await bundle(
-      __dirname + '/integration/typescript-require/index.ts',
-      {production: true}
-    );
-
-    assert.equal(b.assets.size, 2);
-    assert.equal(b.childBundles.size, 0);
-
-    let output = run(b);
-    assert.equal(typeof output.count, 'function');
-    assert.equal(output.count(), 3);
-
-    let js = fs.readFileSync(__dirname + '/dist/index.js', 'utf8');
-    assert(!js.includes('local.a'));
-  });
-
-  it('should support loading tsconfig.json', async function() {
-    let b = await bundle(__dirname + '/integration/typescript-config/index.ts');
-
-    let output = run(b);
-    assert.equal(output, 2);
-
-    let js = fs.readFileSync(__dirname + '/dist/index.js', 'utf8');
-    assert(!js.includes('/* test comment */'));
-  });
+  const js = t.context.fs.readFileSync('index.js');
+  t.true(!js.includes('/* test comment */'));
 });

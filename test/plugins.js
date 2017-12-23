@@ -1,32 +1,30 @@
-const assert = require('assert');
-const {bundle, run, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('plugins', function() {
-  it('should load plugins and apply custom asset type', async function() {
-    let b = await bundle(__dirname + '/integration/plugins/index.js');
+test('plugins: should load plugins and apply custom asset type', async t => {
+  await t.context.bundle(__dirname + '/integration/plugins/index.js');
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'test.txt'],
-      childBundles: []
-    });
-
-    let output = run(b);
-    assert.equal(output, 'hello world');
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'test.txt'],
+    childBundles: []
   });
 
-  it('should load package.json from parent tree', async function() {
-    let b = await bundle(
-      __dirname + '/integration/plugins/sub-folder/index.js'
-    );
+  const output = t.context.run();
+  t.is(output, 'hello world');
+});
 
-    assertBundleTree(b, {
-      name: 'index.js',
-      assets: ['index.js', 'test.txt'],
-      childBundles: []
-    });
+test('plugins: should load package.json from parent tree', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/plugins/sub-folder/index.js'
+  );
 
-    let output = run(b);
-    assert.equal(output, 'hello world');
+  t.context.assertBundleTree({
+    name: 'index.js',
+    assets: ['index.js', 'test.txt'],
+    childBundles: []
   });
+
+  const output = t.context.run();
+  t.is(output, 'hello world');
 });

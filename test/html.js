@@ -1,159 +1,156 @@
-const assert = require('assert');
-const fs = require('fs');
-const {bundle, assertBundleTree} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('html', function() {
-  it('should support bundling HTML', async function() {
-    let b = await bundle(__dirname + '/integration/html/index.html');
+test('html: should support bundling HTML', async t => {
+  await t.context.bundle(__dirname + '/integration/html/index.html');
 
-    assertBundleTree(b, {
-      name: 'index.html',
-      assets: ['index.html'],
-      childBundles: [
-        {
-          type: 'css',
-          assets: ['index.css'],
-          childBundles: []
-        },
-        {
-          type: 'html',
-          assets: ['other.html'],
-          childBundles: [
-            {
-              type: 'js',
-              assets: ['index.js'],
-              childBundles: []
-            }
-          ]
-        }
-      ]
-    });
-
-    let files = fs.readdirSync(__dirname + '/dist');
-    let html = fs.readFileSync(__dirname + '/dist/index.html');
-    for (let file of files) {
-      if (file !== 'index.html') {
-        assert(html.includes(file));
+  t.context.assertBundleTree({
+    name: 'index.html',
+    assets: ['index.html'],
+    childBundles: [
+      {
+        type: 'css',
+        assets: ['index.css'],
+        childBundles: []
+      },
+      {
+        type: 'html',
+        assets: ['other.html'],
+        childBundles: [
+          {
+            type: 'js',
+            assets: ['index.js'],
+            childBundles: []
+          }
+        ]
       }
+    ]
+  });
+
+  const files = t.context.fs.readdirSync(t.context.dir);
+  const html = t.context.fs.readFileSync('index.html');
+  for (let file of files) {
+    if (file !== 'index.html') {
+      t.true(html.includes(file));
     }
+  }
+});
+
+test('html: should support transforming HTML with posthtml', async t => {
+  await t.context.bundle(__dirname + '/integration/posthtml/index.html');
+
+  t.context.assertBundleTree({
+    name: 'index.html',
+    assets: ['index.html'],
+    childBundles: []
   });
 
-  it('should support transforming HTML with posthtml', async function() {
-    let b = await bundle(__dirname + '/integration/posthtml/index.html');
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(html.includes('<h1>Other page</h1>'));
+});
 
-    assertBundleTree(b, {
-      name: 'index.html',
-      assets: ['index.html'],
-      childBundles: []
-    });
+test('html: should insert sibling CSS bundles for JS files in the HEAD', async t => {
+  await t.context.bundle(__dirname + '/integration/html-css/index.html');
 
-    let html = fs.readFileSync(__dirname + '/dist/index.html');
-    assert(html.includes('<h1>Other page</h1>'));
-  });
-
-  it('should insert sibling CSS bundles for JS files in the HEAD', async function() {
-    let b = await bundle(__dirname + '/integration/html-css/index.html');
-
-    assertBundleTree(b, {
-      name: 'index.html',
-      assets: ['index.html'],
-      childBundles: [
-        {
-          type: 'js',
-          assets: ['index.js', 'index.css'],
-          childBundles: [
-            {
-              type: 'css',
-              assets: ['index.css'],
-              childBundles: []
-            }
-          ]
-        }
-      ]
-    });
-
-    let html = fs.readFileSync(__dirname + '/dist/index.html');
-    assert(
-      /<link rel="stylesheet" href="[/\\]{1}dist[/\\]{1}[a-f0-9]+\.css">/.test(
-        html
-      )
-    );
-  });
-
-  it('should insert a HEAD element if needed when adding CSS bundles', async function() {
-    let b = await bundle(__dirname + '/integration/html-css-head/index.html');
-
-    assertBundleTree(b, {
-      name: 'index.html',
-      assets: ['index.html'],
-      childBundles: [
-        {
-          type: 'js',
-          assets: ['index.js', 'index.css'],
-          childBundles: [
-            {
-              type: 'css',
-              assets: ['index.css'],
-              childBundles: []
-            }
-          ]
-        }
-      ]
-    });
-
-    let html = fs.readFileSync(__dirname + '/dist/index.html');
-    assert(
-      /<head><link rel="stylesheet" href="[/\\]{1}dist[/\\]{1}[a-f0-9]+\.css"><\/head>/.test(
-        html
-      )
-    );
-  });
-
-  it('should minify HTML in production mode', async function() {
-    await bundle(__dirname + '/integration/htmlnano/index.html', {
-      production: true
-    });
-
-    let css = fs.readFileSync(__dirname + '/dist/index.html', 'utf8');
-    assert(css.includes('Other page'));
-    assert(!css.includes('\n'));
-  });
-
-  it('should not prepend the public path to assets with remote URLs', async function() {
-    await bundle(__dirname + '/integration/html/index.html');
-
-    let html = fs.readFileSync(__dirname + '/dist/index.html', 'utf8');
-    assert(
-      html.includes('<script src="https://unpkg.com/parcel-bundler"></script>')
-    );
-  });
-
-  it('should not prepend the public path to hash links', async function() {
-    await bundle(__dirname + '/integration/html/index.html');
-
-    let html = fs.readFileSync(__dirname + '/dist/index.html', 'utf8');
-    assert(html.includes('<a href="#hash_link">'));
-  });
-
-  it('should not update root/main file in the bundles', async function() {
-    await bundle(__dirname + '/integration/html-root/index.html');
-
-    let files = fs.readdirSync(__dirname + '/dist');
-
-    for (let file of files) {
-      if (file !== 'index.html' && file.endsWith('.html')) {
-        let html = fs.readFileSync(__dirname + '/dist/' + file);
-        assert(html.includes('index.html'));
+  t.context.assertBundleTree({
+    name: 'index.html',
+    assets: ['index.html'],
+    childBundles: [
+      {
+        type: 'js',
+        assets: ['index.js', 'index.css'],
+        childBundles: [
+          {
+            type: 'css',
+            assets: ['index.css'],
+            childBundles: []
+          }
+        ]
       }
+    ]
+  });
+
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(
+    /<link rel="stylesheet" href="[/\\]{1}[\S]+[/\\]{1}[a-f0-9]+\.css">/.test(
+      html
+    )
+  );
+});
+
+test('html: should insert a HEAD element if needed when adding CSS bundles', async t => {
+  await t.context.bundle(__dirname + '/integration/html-css-head/index.html');
+
+  t.context.assertBundleTree({
+    name: 'index.html',
+    assets: ['index.html'],
+    childBundles: [
+      {
+        type: 'js',
+        assets: ['index.js', 'index.css'],
+        childBundles: [
+          {
+            type: 'css',
+            assets: ['index.css'],
+            childBundles: []
+          }
+        ]
+      }
+    ]
+  });
+
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(
+    /<head><link rel="stylesheet" href="[/\\]{1}[\S]+[/\\]{1}[a-f0-9]+\.css"><\/head>/.test(
+      html
+    )
+  );
+});
+
+test('html: should minify HTML in production mode', async t => {
+  await t.context.bundle(__dirname + '/integration/htmlnano/index.html', {
+    production: true
+  });
+
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(html.includes('Other page'));
+  t.true(!html.includes('\n'));
+});
+
+test('html: should not prepend the public path to assets with remote URLs', async t => {
+  await t.context.bundle(__dirname + '/integration/html/index.html');
+
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(
+    html.includes('<script src="https://unpkg.com/parcel-bundler"></script>')
+  );
+});
+
+test('html: should not prepend the public path to hash links', async t => {
+  await t.context.bundle(__dirname + '/integration/html/index.html');
+
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(html.includes('<a href="#hash_link">'));
+});
+
+test('html: should not update root/main file in the bundles', async t => {
+  await t.context.bundle(__dirname + '/integration/html-root/index.html');
+
+  const files = t.context.fs.readdirSync(t.context.dir);
+
+  for (const file of files) {
+    if (file !== 'index.html' && file.endsWith('.html')) {
+      const html = t.context.fs.readFileSync(file);
+      t.true(html.includes('index.html'));
     }
+  }
+});
+
+test('html: should conserve the spacing in the HTML tags', async t => {
+  await t.context.bundle(__dirname + '/integration/html/index.html', {
+    production: true
   });
 
-  it('should conserve the spacing in the HTML tags', async function() {
-    await bundle(__dirname + '/integration/html/index.html', {
-      production: true
-    });
-
-    let html = fs.readFileSync(__dirname + '/dist/index.html', 'utf8');
-    assert(/<i>hello<\/i> <i>world<\/i>/.test(html));
-  });
+  const html = t.context.fs.readFileSync('index.html');
+  t.true(/<i>hello<\/i> <i>world<\/i>/.test(html));
 });

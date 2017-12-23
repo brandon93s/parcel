@@ -1,55 +1,53 @@
-const assert = require('assert');
-const {bundle, run} = require('./utils');
+import test from 'ava';
+import './helpers';
 
-describe('fs', function() {
-  it('should inline a file as a string', async function() {
-    let b = await bundle(__dirname + '/integration/fs/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file as a string', async t => {
+  await t.context.bundle(__dirname + '/integration/fs/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file as a buffer', async function() {
-    let b = await bundle(__dirname + '/integration/fs-buffer/index.js');
-    let output = run(b);
-    assert.equal(output.constructor.name, 'Buffer');
-    assert.equal(output.length, 5);
-  });
+test('fs: should inline a file as a buffer', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-buffer/index.js');
+  const output = t.context.run();
+  t.is(output.constructor.name, 'Buffer');
+  t.is(output.length, 5);
+});
 
-  it('should inline a file with fs require alias', async function() {
-    let b = await bundle(__dirname + '/integration/fs-alias/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require alias', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-alias/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file with fs require inline', async function() {
-    let b = await bundle(__dirname + '/integration/fs-inline/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require inline', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-inline/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file with fs require assignment', async function() {
-    let b = await bundle(__dirname + '/integration/fs-assign/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require assignment', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-assign/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file with fs require assignment alias', async function() {
-    let b = await bundle(__dirname + '/integration/fs-assign-alias/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require assignment alias', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-assign-alias/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file with fs require destructure', async function() {
-    let b = await bundle(__dirname + '/integration/fs-destructure/index.js');
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require destructure', async t => {
+  await t.context.bundle(__dirname + '/integration/fs-destructure/index.js');
+  const output = t.context.run();
+  t.is(output, 'hello');
+});
 
-  it('should inline a file with fs require destructure assignment', async function() {
-    let b = await bundle(
-      __dirname + '/integration/fs-destructure-assign/index.js'
-    );
-    let output = run(b);
-    assert.equal(output, 'hello');
-  });
+test('fs: should inline a file with fs require destructure assignment', async t => {
+  await t.context.bundle(
+    __dirname + '/integration/fs-destructure-assign/index.js'
+  );
+  const output = t.context.run();
+  t.is(output, 'hello');
 });
