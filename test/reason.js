@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('reason: should produce a bundle', async t => {
+test('should produce a bundle', async t => {
   const b = await t.context.bundle(__dirname + '/integration/reason/index.js');
 
   t.is(b.assets.size, 2);

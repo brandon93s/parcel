@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('less: should support requiring less files', async t => {
+test('should support requiring less files', async t => {
   await t.context.bundle(__dirname + '/integration/less/index.js');
 
   t.context.assertBundleTree({
@@ -24,7 +24,7 @@ test('less: should support requiring less files', async t => {
   t.true(css.includes('.index'));
 });
 
-test('less: should support less imports', async t => {
+test('should support less imports', async t => {
   await t.context.bundle(__dirname + '/integration/less-import/index.js');
 
   t.context.assertBundleTree({
@@ -48,7 +48,7 @@ test('less: should support less imports', async t => {
   t.true(css.includes('.base'));
 });
 
-test('less: should support linking to assets with url() from less', async t => {
+test('should support linking to assets with url() from less', async t => {
   await t.context.bundle(__dirname + '/integration/less-url/index.js');
 
   t.context.assertBundleTree({
@@ -80,7 +80,7 @@ test('less: should support linking to assets with url() from less', async t => {
   t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
 });
 
-test('less: should support transforming less with postcss', async t => {
+test('should support transforming less with postcss', async t => {
   await t.context.bundle(__dirname + '/integration/less-postcss/index.js');
 
   t.context.assertBundleTree({

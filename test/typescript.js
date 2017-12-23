@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('typescript: should produce a ts bundle using ES6 imports', async t => {
+test('should produce a ts bundle using ES6 imports', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/typescript/index.ts'
   );
@@ -14,7 +14,7 @@ test('typescript: should produce a ts bundle using ES6 imports', async t => {
   t.is(output.count(), 3);
 });
 
-test('typescript: should produce a ts bundle using commonJS require', async t => {
+test('should produce a ts bundle using commonJS require', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/typescript-require/index.ts'
   );
@@ -27,7 +27,7 @@ test('typescript: should produce a ts bundle using commonJS require', async t =>
   t.is(output.count(), 3);
 });
 
-test('typescript: should support json require', async t => {
+test('should support json require', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/typescript-json/index.ts'
   );
@@ -40,7 +40,7 @@ test('typescript: should support json require', async t => {
   t.is(output.count(), 3);
 });
 
-test('typescript: should support env variables', async t => {
+test('should support env variables', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/typescript-env/index.ts'
   );
@@ -53,7 +53,7 @@ test('typescript: should support env variables', async t => {
   t.is(output.env(), 'test');
 });
 
-test('typescript: should support importing a URL to a raw asset', async t => {
+test('should support importing a URL to a raw asset', async t => {
   await t.context.bundle(__dirname + '/integration/typescript-raw/index.ts');
 
   t.context.assertBundleTree({
@@ -74,7 +74,7 @@ test('typescript: should support importing a URL to a raw asset', async t => {
   t.true(t.context.fs.existsSync(t.context.path.basename(output.getRaw())));
 });
 
-test('typescript: should minify in production mode', async t => {
+test('should minify in production mode', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/typescript-require/index.ts',
     {production: true}
@@ -91,7 +91,7 @@ test('typescript: should minify in production mode', async t => {
   t.true(!js.includes('local.a'));
 });
 
-test('typescript: should support loading tsconfig.json', async t => {
+test('should support loading tsconfig.json', async t => {
   await t.context.bundle(__dirname + '/integration/typescript-config/index.ts');
 
   const output = t.context.run();

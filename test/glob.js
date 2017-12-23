@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('glob: should require a glob of files', async t => {
+test('should require a glob of files', async t => {
   await t.context.bundle(__dirname + '/integration/glob/index.js');
 
   t.context.assertBundleTree({
@@ -15,7 +15,7 @@ test('glob: should require a glob of files', async t => {
   t.is(await output(), 3);
 });
 
-test('glob: should require nested directories with a glob', async t => {
+test('should require nested directories with a glob', async t => {
   await t.context.bundle(__dirname + '/integration/glob-deep/index.js');
 
   t.context.assertBundleTree({
@@ -29,7 +29,7 @@ test('glob: should require nested directories with a glob', async t => {
   t.is(await output(), 13);
 });
 
-test('glob: should support importing a glob of CSS files', async t => {
+test('should support importing a glob of CSS files', async t => {
   await t.context.bundle(__dirname + '/integration/glob-css/index.js');
 
   t.context.assertBundleTree({

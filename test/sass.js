@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('sass: should support requiring sass files', async t => {
+test('should support requiring sass files', async t => {
   await t.context.bundle(__dirname + '/integration/sass/index.js');
 
   t.context.assertBundleTree({
@@ -24,7 +24,7 @@ test('sass: should support requiring sass files', async t => {
   t.true(css.includes('.index'));
 });
 
-test('sass: should support requiring scss files', async t => {
+test('should support requiring scss files', async t => {
   await t.context.bundle(__dirname + '/integration/scss/index.js');
 
   t.context.assertBundleTree({
@@ -47,7 +47,7 @@ test('sass: should support requiring scss files', async t => {
   t.true(css.includes('.index'));
 });
 
-test('sass: should support scss imports', async t => {
+test('should support scss imports', async t => {
   await t.context.bundle(__dirname + '/integration/scss-import/index.js');
 
   t.context.assertBundleTree({
@@ -71,7 +71,7 @@ test('sass: should support scss imports', async t => {
   t.true(css.includes('.base'));
 });
 
-test('sass: should support linking to assets with url() from scss', async t => {
+test('should support linking to assets with url() from scss', async t => {
   await t.context.bundle(__dirname + '/integration/scss-url/index.js');
 
   t.context.assertBundleTree({
@@ -102,7 +102,7 @@ test('sass: should support linking to assets with url() from scss', async t => {
   t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
 });
 
-test('sass: should support transforming scss with postcss', async t => {
+test('should support transforming scss with postcss', async t => {
   await t.context.bundle(__dirname + '/integration/scss-postcss/index.js');
 
   t.context.assertBundleTree({

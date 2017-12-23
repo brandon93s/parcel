@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('stylus: should support requiring stylus files', async t => {
+test('should support requiring stylus files', async t => {
   await t.context.bundle(__dirname + '/integration/stylus/index.js');
 
   t.context.assertBundleTree({
@@ -24,7 +24,7 @@ test('stylus: should support requiring stylus files', async t => {
   t.true(css.includes('.index'));
 });
 
-test('stylus: should support requiring stylus files with dependencies', async t => {
+test('should support requiring stylus files with dependencies', async t => {
   await t.context.bundle(__dirname + '/integration/stylus-deps/index.js');
 
   // a.styl shouldn't be included as a dependency that we can see.
@@ -51,7 +51,7 @@ test('stylus: should support requiring stylus files with dependencies', async t 
   t.true(css.includes('-webkit-box'));
 });
 
-test('stylus: should support linking to assets with url() from stylus', async t => {
+test('should support linking to assets with url() from stylus', async t => {
   await t.context.bundle(__dirname + '/integration/stylus-url/index.js');
 
   t.context.assertBundleTree({
@@ -82,7 +82,7 @@ test('stylus: should support linking to assets with url() from stylus', async t 
   t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
 });
 
-test('stylus: should support transforming stylus with postcss', async t => {
+test('should support transforming stylus with postcss', async t => {
   await t.context.bundle(__dirname + '/integration/stylus-postcss/index.js');
 
   t.context.assertBundleTree({

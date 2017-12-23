@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('plugins: should load plugins and apply custom asset type', async t => {
+test('should load plugins and apply custom asset type', async t => {
   await t.context.bundle(__dirname + '/integration/plugins/index.js');
 
   t.context.assertBundleTree({
@@ -14,7 +14,7 @@ test('plugins: should load plugins and apply custom asset type', async t => {
   t.is(output, 'hello world');
 });
 
-test('plugins: should load package.json from parent tree', async t => {
+test('should load package.json from parent tree', async t => {
   await t.context.bundle(
     __dirname + '/integration/plugins/sub-folder/index.js'
   );

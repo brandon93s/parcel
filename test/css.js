@@ -3,7 +3,7 @@ import './helpers';
 import promisify from '../src/utils/promisify';
 const ncp = promisify(require('ncp'));
 
-test('css: should produce two bundles when importing a CSS file', async t => {
+test('should produce two bundles when importing a CSS file', async t => {
   await t.context.bundle(__dirname + '/integration/css/index.js');
 
   t.context.assertBundleTree({
@@ -23,7 +23,7 @@ test('css: should produce two bundles when importing a CSS file', async t => {
   t.is(output(), 3);
 });
 
-test('css: should support loading a CSS bundle along side dynamic imports', async t => {
+test('should support loading a CSS bundle along side dynamic imports', async t => {
   await t.context.bundle(__dirname + '/integration/dynamic-css/index.js');
 
   t.context.assertBundleTree({
@@ -54,7 +54,7 @@ test('css: should support loading a CSS bundle along side dynamic imports', asyn
   t.is(await output(), 3);
 });
 
-test('css: should support importing CSS from a CSS file', async t => {
+test('should support importing CSS from a CSS file', async t => {
   await t.context.bundle(__dirname + '/integration/css-import/index.js');
 
   t.context.assertBundleTree({
@@ -80,7 +80,7 @@ test('css: should support importing CSS from a CSS file', async t => {
   t.true(css.includes('.index'));
 });
 
-test('css: should support linking to assets with url() from CSS', async t => {
+test('should support linking to assets with url() from CSS', async t => {
   await t.context.bundle(__dirname + '/integration/css-url/index.js');
 
   t.context.assertBundleTree({
@@ -115,7 +115,7 @@ test('css: should support linking to assets with url() from CSS', async t => {
   t.true(t.context.fs.existsSync(css.match(/url\("([0-9a-f]+\.woff2)"\)/)[1]));
 });
 
-test('css: should support transforming with postcss', async t => {
+test('should support transforming with postcss', async t => {
   await t.context.bundle(__dirname + '/integration/postcss/index.js');
 
   t.context.assertBundleTree({
@@ -142,7 +142,7 @@ test('css: should support transforming with postcss', async t => {
   t.true(css.includes(`.${cssClass}`));
 });
 
-test('css: should minify CSS in production mode', async t => {
+test('should minify CSS in production mode', async t => {
   await t.context.bundle(__dirname + '/integration/cssnano/index.js', {
     production: true
   });
@@ -157,7 +157,7 @@ test('css: should minify CSS in production mode', async t => {
   t.true(!css.includes('\n'));
 });
 
-test('css: should automatically install postcss plugins with npm if needed', async t => {
+test('should automatically install postcss plugins with npm if needed', async t => {
   await ncp(
     __dirname + '/integration/autoinstall/npm',
     t.context.path.join(t.context.dir, '/input')
@@ -173,7 +173,7 @@ test('css: should automatically install postcss plugins with npm if needed', asy
   t.true(css.includes('rgba'));
 });
 
-test('css: should automatically install postcss plugins with yarn if needed', async t => {
+test('should automatically install postcss plugins with yarn if needed', async t => {
   await ncp(
     __dirname + '/integration/autoinstall/yarn',
     t.context.path.join(t.context.dir, '/input')

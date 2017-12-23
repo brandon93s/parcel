@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('javascript: should produce a basic JS bundle with CommonJS requires', async t => {
+test('should produce a basic JS bundle with CommonJS requires', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/commonjs/index.js'
   );
@@ -14,7 +14,7 @@ test('javascript: should produce a basic JS bundle with CommonJS requires', asyn
   t.is(output(), 3);
 });
 
-test('javascript: should produce a basic JS bundle with ES6 imports', async t => {
+test('should produce a basic JS bundle with ES6 imports', async t => {
   const b = await t.context.bundle(__dirname + '/integration/es6/index.js');
 
   t.is(b.assets.size, 8);
@@ -26,7 +26,7 @@ test('javascript: should produce a basic JS bundle with ES6 imports', async t =>
   t.is(output.default(), 3);
 });
 
-test('javascript: should produce a JS bundle with default exorts and no imports', async t => {
+test('should produce a JS bundle with default exorts and no imports', async t => {
   const b = await t.context.bundle(
     __dirname + '/integration/es6-default-only/index.js'
   );
@@ -40,7 +40,7 @@ test('javascript: should produce a JS bundle with default exorts and no imports'
   t.is(output.default(), 3);
 });
 
-test('javascript: should split bundles when a dynamic import is used', async t => {
+test('should split bundles when a dynamic import is used', async t => {
   await t.context.bundle(__dirname + '/integration/dynamic/index.js');
 
   t.context.assertBundleTree({
@@ -59,7 +59,7 @@ test('javascript: should split bundles when a dynamic import is used', async t =
   t.is(await output(), 3);
 });
 
-test('javascript: should dynamic import files which import raw files', async t => {
+test('should dynamic import files which import raw files', async t => {
   await t.context.bundle(
     __dirname + '/integration/dynamic-references-raw/index.js'
   );
@@ -80,7 +80,7 @@ test('javascript: should dynamic import files which import raw files', async t =
   t.is(await output(), 3);
 });
 
-test('javascript: should return all exports as an object when using ES modules', async t => {
+test('should return all exports as an object when using ES modules', async t => {
   await t.context.bundle(__dirname + '/integration/dynamic-esm/index.js');
 
   t.context.assertBundleTree({
@@ -99,7 +99,7 @@ test('javascript: should return all exports as an object when using ES modules',
   t.is(await output(), 3);
 });
 
-test('javascript: should hoist common dependencies into a parent bundle', async t => {
+test('should hoist common dependencies into a parent bundle', async t => {
   await t.context.bundle(__dirname + '/integration/dynamic-hoist/index.js');
 
   t.context.assertBundleTree({
@@ -128,7 +128,7 @@ test('javascript: should hoist common dependencies into a parent bundle', async 
   t.is(await output(), 7);
 });
 
-test('javascript: should support requiring JSON files', async t => {
+test('should support requiring JSON files', async t => {
   await t.context.bundle(__dirname + '/integration/json/index.js');
 
   t.context.assertBundleTree({
@@ -142,7 +142,7 @@ test('javascript: should support requiring JSON files', async t => {
   t.is(output(), 3);
 });
 
-test('javascript: should support importing a URL to a raw asset', async t => {
+test('should support importing a URL to a raw asset', async t => {
   await t.context.bundle(__dirname + '/integration/import-raw/index.js');
 
   t.context.assertBundleTree({
@@ -163,7 +163,7 @@ test('javascript: should support importing a URL to a raw asset', async t => {
   t.true(t.context.fs.existsSync(t.context.path.basename(output())));
 });
 
-test('javascript: should minify JS in production mode', async t => {
+test('should minify JS in production mode', async t => {
   await t.context.bundle(__dirname + '/integration/uglify/index.js', {
     production: true
   });
@@ -176,7 +176,7 @@ test('javascript: should minify JS in production mode', async t => {
   t.true(!js.includes('local.a'));
 });
 
-test('javascript: should use uglify config', async t => {
+test('should use uglify config', async t => {
   await t.context.bundle(__dirname + '/integration/uglify-config/index.js', {
     production: true
   });
@@ -185,7 +185,7 @@ test('javascript: should use uglify config', async t => {
   t.true(js.includes('console.log'));
 });
 
-test('javascript: should insert global variables when needed', async t => {
+test('should insert global variables when needed', async t => {
   await t.context.bundle(__dirname + '/integration/globals/index.js');
 
   const output = t.context.run();
@@ -197,14 +197,14 @@ test('javascript: should insert global variables when needed', async t => {
   });
 });
 
-test('javascript: should insert environment variables', async t => {
+test('should insert environment variables', async t => {
   await t.context.bundle(__dirname + '/integration/env/index.js');
 
   const output = t.context.run();
   t.is(output(), 'test:test');
 });
 
-test('javascript: should support adding implicit dependencies', async t => {
+test('should support adding implicit dependencies', async t => {
   await t.context.bundle(__dirname + '/integration/json/index.js', {
     delegate: {
       getImplicitDependencies(asset) {
@@ -231,7 +231,7 @@ test('javascript: should support adding implicit dependencies', async t => {
   t.is(output(), 3);
 });
 
-test('javascript: should support requiring YAML files', async t => {
+test('should support requiring YAML files', async t => {
   await t.context.bundle(__dirname + '/integration/yaml/index.js');
 
   t.context.assertBundleTree({
@@ -245,7 +245,7 @@ test('javascript: should support requiring YAML files', async t => {
   t.is(output(), 3);
 });
 
-test('javascript: should support requiring CoffeeScript files', async t => {
+test('should support requiring CoffeeScript files', async t => {
   await t.context.bundle(__dirname + '/integration/coffee/index.js');
 
   t.context.assertBundleTree({
@@ -259,7 +259,7 @@ test('javascript: should support requiring CoffeeScript files', async t => {
   t.is(output(), 3);
 });
 
-test('javascript: should resolve the browser field before main', async t => {
+test('should resolve the browser field before main', async t => {
   await t.context.bundle(__dirname + '/integration/resolve-entries/browser.js');
 
   t.context.assertBundleTree({
@@ -274,7 +274,7 @@ test('javascript: should resolve the browser field before main', async t => {
   t.is(output.test(), 'pkg-browser');
 });
 
-test('javascript: should resolve advanced browser resolution', async t => {
+test('should resolve advanced browser resolution', async t => {
   await t.context.bundle(
     __dirname + '/integration/resolve-entries/browser-multiple.js'
   );
@@ -291,7 +291,7 @@ test('javascript: should resolve advanced browser resolution', async t => {
   t.is(output.test(), 'pkg-browser-multiple');
 });
 
-test('javascript: should resolve the module field before main', async t => {
+test('should resolve the module field before main', async t => {
   await t.context.bundle(
     __dirname + '/integration/resolve-entries/module-field.js'
   );
@@ -308,7 +308,7 @@ test('javascript: should resolve the module field before main', async t => {
   t.is(output.test(), 'pkg-es6-module');
 });
 
-test('javascript: should resolve the jsnext:main field before main', async t => {
+test('should resolve the jsnext:main field before main', async t => {
   await t.context.bundle(
     __dirname + '/integration/resolve-entries/jsnext-field.js'
   );
@@ -325,7 +325,7 @@ test('javascript: should resolve the jsnext:main field before main', async t => 
   t.is(output.test(), 'pkg-jsnext-module');
 });
 
-test('javascript: should resolve the module field before jsnext:main', async t => {
+test('should resolve the module field before jsnext:main', async t => {
   await t.context.bundle(
     __dirname + '/integration/resolve-entries/both-fields.js'
   );
@@ -342,7 +342,7 @@ test('javascript: should resolve the module field before jsnext:main', async t =
   t.is(output.test(), 'pkg-es6-module');
 });
 
-test('javascript: should resolve the main field', async t => {
+test('should resolve the main field', async t => {
   await t.context.bundle(
     __dirname + '/integration/resolve-entries/main-field.js'
   );

@@ -1,7 +1,7 @@
 import test from 'ava';
 import './helpers';
 
-test('html: should support bundling HTML', async t => {
+test('should support bundling HTML', async t => {
   await t.context.bundle(__dirname + '/integration/html/index.html');
 
   t.context.assertBundleTree({
@@ -36,7 +36,7 @@ test('html: should support bundling HTML', async t => {
   }
 });
 
-test('html: should support transforming HTML with posthtml', async t => {
+test('should support transforming HTML with posthtml', async t => {
   await t.context.bundle(__dirname + '/integration/posthtml/index.html');
 
   t.context.assertBundleTree({
@@ -49,7 +49,7 @@ test('html: should support transforming HTML with posthtml', async t => {
   t.true(html.includes('<h1>Other page</h1>'));
 });
 
-test('html: should insert sibling CSS bundles for JS files in the HEAD', async t => {
+test('should insert sibling CSS bundles for JS files in the HEAD', async t => {
   await t.context.bundle(__dirname + '/integration/html-css/index.html');
 
   t.context.assertBundleTree({
@@ -78,7 +78,7 @@ test('html: should insert sibling CSS bundles for JS files in the HEAD', async t
   );
 });
 
-test('html: should insert a HEAD element if needed when adding CSS bundles', async t => {
+test('should insert a HEAD element if needed when adding CSS bundles', async t => {
   await t.context.bundle(__dirname + '/integration/html-css-head/index.html');
 
   t.context.assertBundleTree({
@@ -107,7 +107,7 @@ test('html: should insert a HEAD element if needed when adding CSS bundles', asy
   );
 });
 
-test('html: should minify HTML in production mode', async t => {
+test('should minify HTML in production mode', async t => {
   await t.context.bundle(__dirname + '/integration/htmlnano/index.html', {
     production: true
   });
@@ -117,7 +117,7 @@ test('html: should minify HTML in production mode', async t => {
   t.true(!html.includes('\n'));
 });
 
-test('html: should not prepend the public path to assets with remote URLs', async t => {
+test('should not prepend the public path to assets with remote URLs', async t => {
   await t.context.bundle(__dirname + '/integration/html/index.html');
 
   const html = t.context.fs.readFileSync('index.html');
@@ -126,14 +126,14 @@ test('html: should not prepend the public path to assets with remote URLs', asyn
   );
 });
 
-test('html: should not prepend the public path to hash links', async t => {
+test('should not prepend the public path to hash links', async t => {
   await t.context.bundle(__dirname + '/integration/html/index.html');
 
   const html = t.context.fs.readFileSync('index.html');
   t.true(html.includes('<a href="#hash_link">'));
 });
 
-test('html: should not update root/main file in the bundles', async t => {
+test('should not update root/main file in the bundles', async t => {
   await t.context.bundle(__dirname + '/integration/html-root/index.html');
 
   const files = t.context.fs.readdirSync(t.context.dir);
@@ -146,7 +146,7 @@ test('html: should not update root/main file in the bundles', async t => {
   }
 });
 
-test('html: should conserve the spacing in the HTML tags', async t => {
+test('should conserve the spacing in the HTML tags', async t => {
   await t.context.bundle(__dirname + '/integration/html/index.html', {
     production: true
   });

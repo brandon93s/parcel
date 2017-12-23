@@ -86,5 +86,15 @@
   "collective": {
     "type": "opencollective",
     "url": "https://opencollective.com/parcel"
+  },
+  "ava": {
+    "files": [
+      "**/test/**.js",
+      "!**/integration/**.js",
+      "!**/test/hmr.js",
+      "!**/test/watcher.js",
+      "!**/test/utils.js",
+      "!**/test/server.js"
+    ]
   }
 }
